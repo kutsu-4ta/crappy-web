@@ -1,4 +1,4 @@
-import type { DashboardStats } from '../types/workData';
+import type { DashboardStats } from '../types/WorkData';
 import { Gauge, Target, AlertTriangle } from 'lucide-react';
 
 interface StatusHeaderProps {

@@ -1,5 +1,5 @@
 import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
-import type { DashboardStats } from '../types/workData';
+import type { DashboardStats } from '../types/WorkData';
 
 interface ChartDataPoint {
     day: number;

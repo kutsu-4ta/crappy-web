@@ -6,7 +6,7 @@ import {
     isSaturday,
     isSunday
 } from 'date-fns';
-import type {DashboardStats} from "../types/workData";
+import type {DashboardStats} from "../types/WorkData";
 
 // 本来はAPIやJSONから取得する祝日リスト（2024年の例）
 const HOLIDAYS = [

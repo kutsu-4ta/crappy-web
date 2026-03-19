@@ -1,4 +1,4 @@
-import type {DashboardStats} from '../types/workData';
+import type {DashboardStats} from '../types/WorkData';
 import {DashboardChart} from "./DashboardChart";
 import {TrendingUp} from "lucide-react";
 
