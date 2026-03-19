@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Minus, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 interface WorkInputCardProps {
     onSave: (hours: number) => void;

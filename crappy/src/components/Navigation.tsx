@@ -1,59 +1,89 @@
-import { Menu, X, Clock, Calendar, Receipt, LayoutDashboard } from 'lucide-react';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 export type ViewMode = 'dashboard' | 'punch' | 'attendance' | 'expense';
 
 interface Props {
-    currentView: ViewMode;
-    isMenuOpen: boolean;
-    setIsMenuOpen: (open: boolean) => void;
-    onNavigate: (view: ViewMode) => void;
+  currentView: ViewMode;
+  isMenuOpen: boolean;
+  onClose: () => void;
+  onNavigate: (view: ViewMode) => void;
 }
 
-export const Navigation = ({ currentView, isMenuOpen, setIsMenuOpen, onNavigate }: Props) => {
-    const menuItems = [
-        { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={20} /> },
-        { id: 'punch', label: 'PUNCH', icon: <Clock size={20} /> },
-        { id: 'attendance', label: 'ATTENDANCE', icon: <Calendar size={20} /> },
-        { id: 'expense', label: 'EXPENSE', icon: <Receipt size={20} /> },
-    ] as const;
+const menuItems = [
+  { id: 'dashboard' as ViewMode, label: 'Dashboard', sublabel: '概況', icon: <DashboardIcon /> },
+  { id: 'punch' as ViewMode, label: 'Punch', sublabel: '打刻', icon: <AccessTimeIcon /> },
+  { id: 'attendance' as ViewMode, label: 'Attendance', sublabel: '稼働ログ', icon: <CalendarMonthIcon /> },
+  { id: 'expense' as ViewMode, label: 'Expense', sublabel: '経費', icon: <ReceiptLongIcon /> },
+];
 
-    return (
-        <>
-            {/* メニューボタン */}
-            <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="w-14 h-full flex items-center justify-center bg-slate-800 text-slate-400 hover:text-white border-l border-slate-700 shrink-0 transition-colors z-[101]"
-            >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
-            {/* メニューオーバーレイ */}
-            {isMenuOpen && (
-                <>
-                    <div
-                        className="fixed inset-0 bg-black/50 z-90 animate-in fade-in duration-200"
-                        onClick={() => setIsMenuOpen(false)}
-                    />
-                    <nav className="absolute top-14 left-0 w-full bg-slate-900 p-3 border-b border-slate-800 z-100 flex flex-col gap-2 shadow-2xl animate-in slide-in-from-top-2 duration-200">
-                        {menuItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => onNavigate(item.id)}
-                                className={`flex items-center gap-4 w-full p-4 rounded-xl font-black text-sm transition-all active:scale-[0.98] ${
-                                    currentView === item.id
-                                        ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-900/40'
-                                        : 'text-slate-400 hover:bg-slate-800'
-                                }`}
-                            >
-                                <div className={currentView === item.id ? 'text-white' : 'text-cyan-400'}>
-                                    {item.icon}
-                                </div>
-                                {item.label}
-                            </button>
-                        ))}
-                    </nav>
-                </>
-            )}
-        </>
-    );
+export const Navigation = ({ currentView, isMenuOpen, onClose, onNavigate }: Props) => {
+  return (
+    <Drawer anchor="right" open={isMenuOpen} onClose={onClose}>
+      <Box sx={{ width: 260, pt: 3, pb: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Typography
+          variant="caption"
+          sx={{ px: 3, mb: 2, color: '#334155', letterSpacing: '0.15em', fontSize: '0.65rem' }}
+        >
+          MENU
+        </Typography>
+        <List sx={{ px: 1, flex: 1 }}>
+          {menuItems.map((item) => {
+            const isActive = currentView === item.id;
+            return (
+              <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton
+                  selected={isActive}
+                  onClick={() => onNavigate(item.id)}
+                  sx={{
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 2,
+                    '&.Mui-selected': {
+                      bgcolor: '#0891b2',
+                      '&:hover': { bgcolor: '#0e7490' },
+                    },
+                    '&:hover': { bgcolor: '#1e293b' },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: isActive ? '#fff' : '#22d3ee',
+                      minWidth: 40,
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: isActive ? '#fff' : '#94a3b8',
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                    <Typography sx={{ color: isActive ? 'rgba(255,255,255,0.6)' : '#475569', fontSize: '0.7rem' }}>
+                      {item.sublabel}
+                    </Typography>
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+    </Drawer>
+  );
 };

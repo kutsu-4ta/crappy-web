@@ -1,111 +1,263 @@
 import { useState, useEffect } from 'react';
-import { Play, Square, RotateCcw, Check, Clock } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
+import CheckIcon from '@mui/icons-material/Check';
+import { format } from 'date-fns';
 
-export const PunchView = ({ onSave }: { onSave: (hours: number) => void }) => {
-    const [startTime, setStartTime] = useState<Date | null>(null);
-    const [elapsedHours, setElapsedHours] = useState(0);
-    const [isWorking, setIsWorking] = useState(false);
+interface Props {
+  onSave: (hours: number) => void;
+}
 
-    // 1分ごとに経過時間を更新（表示用）
-    useEffect(() => {
-        let interval: number;
-        if (isWorking && startTime) {
-            interval = window.setInterval(() => {
-                const diffMs = new Date().getTime() - startTime.getTime();
-                setElapsedHours(diffMs / (1000 * 60 * 60));
-            }, 60000);
-        }
-        return () => clearInterval(interval);
-    }, [isWorking, startTime]);
+export const PunchView = ({ onSave }: Props) => {
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedHours, setElapsedHours] = useState(0);
+  const [isWorking, setIsWorking] = useState(false);
+  const [clockedOut, setClockedOut] = useState(false);
+  const [manualInput, setManualInput] = useState('');
 
-    const handleStart = () => {
-        setStartTime(new Date());
-        setIsWorking(true);
-    };
+  useEffect(() => {
+    let interval: number;
+    if (isWorking && startTime) {
+      interval = window.setInterval(() => {
+        const diffMs = new Date().getTime() - startTime.getTime();
+        setElapsedHours(diffMs / (1000 * 60 * 60));
+      }, 30000);
+    }
+    return () => clearInterval(interval);
+  }, [isWorking, startTime]);
 
-    const handleEnd = () => {
-        setIsWorking(false);
-        // 終了時に微調整モードへ（現在の経過時間を保持）
-    };
+  const handleStart = () => {
+    const now = new Date();
+    setStartTime(now);
+    setIsWorking(true);
+    setClockedOut(false);
+    setElapsedHours(0);
+  };
 
-    const adjust = (amount: number) => {
-        setElapsedHours(prev => Math.max(0, prev + amount));
-    };
+  const handleEnd = () => {
+    const diffMs = new Date().getTime() - (startTime?.getTime() ?? 0);
+    setElapsedHours(Math.round((diffMs / (1000 * 60 * 60)) * 4) / 4);
+    setIsWorking(false);
+    setClockedOut(true);
+  };
 
-    return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  const handleReset = () => {
+    setStartTime(null);
+    setElapsedHours(0);
+    setIsWorking(false);
+    setClockedOut(false);
+    setManualInput('');
+  };
 
-            {/* メイン表示：稼働中なら自動カウントアップ、止まれば手動調整モード */}
-            <div className={`rounded-[3rem] p-10 text-center shadow-2xl transition-all duration-700 ${
-                isWorking ? 'bg-cyan-600 text-white' : 'bg-slate-900 text-white'
-            }`}>
-                <div className="flex items-center justify-center gap-2 mb-2 opacity-50">
-                    <Clock size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-            {isWorking ? 'Now Working...' : 'Total Work Time'}
-          </span>
-                </div>
+  const adjust = (amount: number) => {
+    setElapsedHours(prev => Math.max(0, Math.round((prev + amount) * 100) / 100));
+  };
 
-                <div className="flex items-baseline justify-center gap-2">
-          <span className="text-8xl font-black font-mono tracking-tighter">
-            {elapsedHours.toFixed(2)}
-          </span>
-                    <span className="text-2xl font-bold opacity-40">h</span>
-                </div>
+  const showAdjust = clockedOut || (!isWorking && !clockedOut && elapsedHours > 0);
 
-                {startTime && (
-                    <div className="mt-4 text-[10px] font-bold opacity-40 uppercase tracking-widest">
-                        Started at {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                )}
-            </div>
+  return (
+    <Stack spacing={2}>
+      {/* Timer Display */}
+      <Card
+        sx={{
+          background: isWorking
+            ? 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)'
+            : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          border: 'none',
+          borderRadius: 5,
+          transition: 'background 0.6s ease',
+        }}
+      >
+        <CardContent sx={{ p: 4, textAlign: 'center', '&:last-child': { pb: 4 } }}>
+          <Typography
+            sx={{
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              color: isWorking ? 'rgba(255,255,255,0.5)' : '#475569',
+              letterSpacing: '0.2em',
+              mb: 2,
+            }}
+          >
+            {isWorking ? 'NOW WORKING...' : clockedOut ? 'ADJUST & LOG' : 'READY'}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1 }}>
+            <Typography
+              sx={{
+                fontSize: '5.5rem',
+                fontWeight: 900,
+                fontFamily: 'monospace',
+                color: '#fff',
+                letterSpacing: '-0.03em',
+                lineHeight: 1,
+              }}
+            >
+              {elapsedHours.toFixed(2)}
+            </Typography>
+            <Typography sx={{ color: 'rgba(255,255,255,0.3)', fontWeight: 700, fontSize: '1.5rem' }}>h</Typography>
+          </Box>
+          {startTime && (
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)', mt: 1.5, letterSpacing: '0.1em' }}>
+              {format(startTime, 'HH:mm')} スタート
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* 打刻アクション：大きなトグルボタン */}
-            {!isWorking ? (
-                <button
-                    onClick={handleStart}
-                    className="w-full bg-white border-4 border-cyan-500 text-cyan-600 h-24 rounded-[2.5rem] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-lg shadow-cyan-100"
-                >
-                    <Play size={32} fill="currentColor" />
-                    <span className="text-2xl font-black italic">CLOCK IN</span>
-                </button>
-            ) : (
-                <button
-                    onClick={handleEnd}
-                    className="w-full bg-rose-500 text-white h-24 rounded-[2.5rem] flex items-center justify-center gap-4 transition-all active:scale-95 shadow-lg shadow-rose-200"
-                >
-                    <Square size={32} fill="currentColor" />
-                    <span className="text-2xl font-black italic">CLOCK OUT</span>
-                </button>
+      {/* Clock In / Clock Out */}
+      {!isWorking && !clockedOut && (
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<PlayArrowIcon />}
+          onClick={handleStart}
+          sx={{
+            height: 72,
+            borderRadius: 4,
+            border: '2px solid',
+            borderColor: 'primary.main',
+            color: 'primary.main',
+            fontSize: '1.1rem',
+            fontWeight: 900,
+            fontStyle: 'italic',
+            '&:hover': { border: '2px solid', borderColor: 'primary.dark', bgcolor: 'primary.main', color: '#fff' },
+          }}
+        >
+          CLOCK IN
+        </Button>
+      )}
+
+      {isWorking && (
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<StopIcon />}
+          onClick={handleEnd}
+          color="secondary"
+          sx={{
+            height: 72,
+            borderRadius: 4,
+            fontSize: '1.1rem',
+            fontWeight: 900,
+            fontStyle: 'italic',
+            boxShadow: '0 8px 24px rgba(244, 63, 94, 0.3)',
+          }}
+        >
+          CLOCK OUT
+        </Button>
+      )}
+
+      {/* Adjust Buttons */}
+      {showAdjust && (
+        <>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
+            {[
+              { label: '−1.0', amount: -1 },
+              { label: '−0.25', amount: -0.25 },
+              { label: '+0.25', amount: 0.25 },
+              { label: '+1.0', amount: 1 },
+            ].map(({ label, amount }) => (
+              <Button
+                key={label}
+                variant="outlined"
+                onClick={() => adjust(amount)}
+                sx={{
+                  borderRadius: 3,
+                  borderColor: '#e2e8f0',
+                  color: '#64748b',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  py: 1.2,
+                  '&:hover': { borderColor: 'primary.main', color: 'primary.main', bgcolor: 'rgba(8, 145, 178, 0.04)' },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Box>
+
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<CheckIcon />}
+            onClick={() => { onSave(elapsedHours); handleReset(); }}
+            sx={{
+              borderRadius: 3,
+              height: 56,
+              bgcolor: '#0f172a',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              letterSpacing: '0.1em',
+              color: '#22d3ee',
+              '&:hover': { bgcolor: '#1e293b' },
+              boxShadow: 'none',
+            }}
+          >
+            LOG {elapsedHours.toFixed(2)}h
+          </Button>
+        </>
+      )}
+
+      {/* Manual Input */}
+      {!isWorking && !clockedOut && elapsedHours === 0 && (
+        <Card>
+          <CardContent sx={{ p: 2.5 }}>
+            <Typography sx={{ fontSize: '0.6rem', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.1em', mb: 2 }}>
+              手動入力
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              <TextField
+                type="number"
+                placeholder="0.00"
+                slotProps={{ htmlInput: { step: 0.25, min: 0, max: 24, style: { textAlign: 'center', fontSize: '1.5rem', fontWeight: 800, fontFamily: 'monospace' } } }}
+                value={manualInput}
+                onChange={e => {
+                  setManualInput(e.target.value);
+                  setElapsedHours(Math.max(0, Number(e.target.value)));
+                }}
+                sx={{
+                  flex: 1,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                    bgcolor: '#f8fafc',
+                    '& fieldset': { borderColor: '#e2e8f0' },
+                    '&:hover fieldset': { borderColor: '#0891b2' },
+                    '&.Mui-focused fieldset': { borderColor: '#0891b2' },
+                  },
+                }}
+                variant="outlined"
+              />
+              <Typography sx={{ fontWeight: 700, color: '#94a3b8', fontSize: '1.2rem' }}>h</Typography>
+            </Box>
+            {Number(manualInput) > 0 && (
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<CheckIcon />}
+                onClick={() => { onSave(elapsedHours); handleReset(); }}
+                sx={{
+                  mt: 2,
+                  borderRadius: 3,
+                  bgcolor: '#0f172a',
+                  color: '#22d3ee',
+                  fontWeight: 800,
+                  letterSpacing: '0.1em',
+                  '&:hover': { bgcolor: '#1e293b' },
+                  boxShadow: 'none',
+                }}
+              >
+                LOG {Number(manualInput).toFixed(2)}h
+              </Button>
             )}
-
-            {/* 雑な微調整：出勤・退勤後に「休憩引くの忘れた」「キリよくしたい」を解決 */}
-            <div className="grid grid-cols-4 gap-2 pt-4">
-                <AdjustButton label="-1.0" onClick={() => adjust(-1)} />
-                <AdjustButton label="-0.25" onClick={() => adjust(-0.25)} />
-                <AdjustButton label="+0.25" onClick={() => adjust(0.25)} />
-                <AdjustButton label="+1.0" onClick={() => adjust(1)} />
-            </div>
-
-            {/* 最終確定 */}
-            {!isWorking && elapsedHours > 0 && (
-                <button
-                    onClick={() => onSave(elapsedHours)}
-                    className="w-full bg-slate-800 text-cyan-400 h-16 rounded-2xl flex items-center justify-center gap-2 font-black uppercase tracking-widest mt-4 border-2 border-slate-700"
-                >
-                    <Check size={20} />
-                    Log This Session
-                </button>
-            )}
-        </div>
-    );
+          </CardContent>
+        </Card>
+      )}
+    </Stack>
+  );
 };
-
-const AdjustButton = ({ label, onClick }: any) => (
-    <button
-        onClick={onClick}
-        className="bg-white border border-slate-200 h-12 rounded-xl text-[10px] font-black text-slate-500 active:bg-slate-100 transition-colors"
-    >
-        {label}
-    </button>
-);
