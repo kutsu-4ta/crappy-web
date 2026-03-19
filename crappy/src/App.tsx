@@ -4,6 +4,7 @@ import {StatusHeader} from './components/StatusHeader';
 import {calculateDashboardStats} from './hooks/useDashboardStats';
 import {WorkInputCard} from "./components/WorkInputCard";
 import {Dashboard} from "./components/Dashboard";
+import {AttendanceCalendar} from "./components/AttendanceCalendar";
 
 function App() {
     // 本来はスプシから取得する値（今は仮で100時間入力済みとする）
@@ -22,16 +23,17 @@ function App() {
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="min-h-screen bg-slate-50 pb-24">
-                <StatusHeader stats={stats}/>
+                {/*<StatusHeader stats={stats}/>*/}
 
             </div>
             <main className="max-w-md mx-auto p-6">
-                <Dashboard
-                    stats={stats}
-                    currentTotal={currentTotal}
-                    targetMin={140}
-                    targetMax={180}
-                />
+                <AttendanceCalendar/>
+                {/*<Dashboard*/}
+                {/*    stats={stats}*/}
+                {/*    currentTotal={currentTotal}*/}
+                {/*    targetMin={140}*/}
+                {/*    targetMax={180}*/}
+                {/*/>*/}
                 {/*<WorkInputCard onSave={(h) => console.log(`${h}時間を保存します`)}/>*/}
 
                 {/* デバッグ用スライダーは下に追いやるか消す */}
