@@ -4,6 +4,7 @@ import {Dashboard} from './components/Dashboard';
 import {AttendanceCalendar} from './components/AttendanceCalendar';
 import {Navigation, type ViewMode} from './components/Navigation';
 import {calculateDashboardStats} from './hooks/useDashboardStats';
+import {PunchView} from "./components/PunchView";
 
 function App() {
     const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
@@ -51,12 +52,15 @@ function App() {
                 {currentView === 'attendance' && <AttendanceCalendar/>}
 
                 {/* Placeholder Views */}
-                {(currentView === 'punch' || currentView === 'expense') && (
-                    <div
-                        className="flex flex-col items-center justify-center h-64 text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem] bg-white">
-                        <span className="font-black text-xl uppercase italic">{currentView}</span>
-                        <p className="text-xs font-bold mt-2">Coming Soon...</p>
-                    </div>
+                {currentView === 'punch' && (
+                    <PunchView
+                        onSave={(hours) => {
+                            console.log("Logged:", hours);
+                            // ここで currentTotal を更新するロジックを入れるとグラフに反映される
+                            setCurrentTotal(prev => prev + hours);
+                            navigateTo('dashboard');
+                        }}
+                    />
                 )}
             </main>
         </div>
