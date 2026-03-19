@@ -9,10 +9,11 @@ import TextField from '@mui/material/TextField';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import CheckIcon from '@mui/icons-material/Check';
+import CircularProgress from '@mui/material/CircularProgress';
 import { format } from 'date-fns';
 
 interface Props {
-  onSave: (hours: number) => void;
+  onSave: (hours: number) => void | Promise<void>;
 }
 
 export const PunchView = ({ onSave }: Props) => {
@@ -21,6 +22,7 @@ export const PunchView = ({ onSave }: Props) => {
   const [isWorking, setIsWorking] = useState(false);
   const [clockedOut, setClockedOut] = useState(false);
   const [manualInput, setManualInput] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let interval: number;
@@ -185,8 +187,9 @@ export const PunchView = ({ onSave }: Props) => {
           <Button
             variant="contained"
             size="large"
-            startIcon={<CheckIcon />}
-            onClick={() => { onSave(elapsedHours); handleReset(); }}
+            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <CheckIcon />}
+            disabled={saving}
+            onClick={async () => { setSaving(true); await onSave(elapsedHours); handleReset(); setSaving(false); }}
             sx={{
               borderRadius: 3,
               height: 56,
@@ -199,7 +202,7 @@ export const PunchView = ({ onSave }: Props) => {
               boxShadow: 'none',
             }}
           >
-            LOG {elapsedHours.toFixed(2)}h
+            {saving ? '保存中...' : `LOG ${elapsedHours.toFixed(2)}h`}
           </Button>
         </>
       )}
@@ -239,8 +242,9 @@ export const PunchView = ({ onSave }: Props) => {
               <Button
                 fullWidth
                 variant="contained"
-                startIcon={<CheckIcon />}
-                onClick={() => { onSave(elapsedHours); handleReset(); }}
+                startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <CheckIcon />}
+                disabled={saving}
+                onClick={async () => { setSaving(true); await onSave(elapsedHours); handleReset(); setSaving(false); }}
                 sx={{
                   mt: 2,
                   borderRadius: 3,

@@ -18,6 +18,27 @@ export type Expense = {
   amount: number;
   description: string;
   tag: ExpenseTag;
+  receiptUrl?: string;      // Firebase Storage download URL
+  receiptPath?: string;     // Storage path for deletion
+};
+
+// Monthly settings override (null fields fall back to user defaults)
+export type MonthSettings = {
+  targetMin?: number;
+  targetMax?: number;
+};
+
+// Firestore document shapes
+export type AttendanceDoc = {
+  month: string;           // "YYYY-MM"
+  sessions: WorkSession[];
+  updatedAt: unknown;      // Firestore Timestamp (serverTimestamp)
+};
+
+export type ExpenseDoc = {
+  month: string;
+  items: Expense[];
+  updatedAt: unknown;
 };
 
 export interface DashboardStats {
@@ -26,12 +47,12 @@ export interface DashboardStats {
   totalBusinessDays: number;
   businessDaysElapsed: number;
   estimatedTotal: number;
-  requiredDailyHours: number;   // to hit targetMin
-  upperLimitDailyHours: number; // max per day to stay under targetMax
+  requiredDailyHours: number;
+  upperLimitDailyHours: number;
   targetMin: number;
   targetMax: number;
-  towardsMin: number;  // hours remaining to hit min
-  towardsMax: number;  // hours remaining before hitting max
+  towardsMin: number;
+  towardsMax: number;
   dailyAverage: number;
 }
 

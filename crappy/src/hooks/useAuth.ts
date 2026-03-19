@@ -3,6 +3,7 @@ import {
   onAuthStateChanged,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   signOut,
   type User,
 } from 'firebase/auth';
@@ -28,6 +29,9 @@ export function useAuth(): AuthResult {
   const [authState, setAuthState] = useState<AuthState>('loading');
 
   useEffect(() => {
+    // リダイレクト認証後の結果を処理（モバイル向け）
+    getRedirectResult(auth).catch(() => {});
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (!u) {

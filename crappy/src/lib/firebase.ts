@@ -1,5 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  persistentSingleTabManager,
+} from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -8,9 +15,22 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_MEASUREMENT_ID
 };
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Web Locks API が使えない環境（古いiOS Safari等）では SingleTabManager にフォールバック
+const supportsWebLocks = typeof navigator !== 'undefined' && 'locks' in navigator;
+
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: supportsWebLocks
+      ? persistentMultipleTabManager()
+      : persistentSingleTabManager({ forceOwnership: true }),
+  }),
+});
+
+// Firebase Storage
+export const storage = getStorage(app);
