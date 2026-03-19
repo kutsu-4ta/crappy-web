@@ -1,5 +1,4 @@
-// import { DashboardStats} from "../types/workData"; これはダメ
-import type { DashboardStats } from '../types/workData'; //　これはOK
+import type { DashboardStats } from '../types/workData';
 import { Gauge, Target, AlertTriangle } from 'lucide-react';
 
 interface StatusHeaderProps {
@@ -7,47 +6,43 @@ interface StatusHeaderProps {
 }
 
 export const StatusHeader = ({ stats }: StatusHeaderProps) => {
-    // propsの中身を展開して使いやすくする
     const { estimatedTotal, requiredDailyHours, upperLimitWarning, remainingBusinessDays } = stats;
 
     return (
-        <div className="bg-slate-900 text-white p-4 sticky top-0 shadow-lg border-b border-slate-700">
-            <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+            padding: '0 15px',
+            gap: '15px',
+            color: 'black',
+            whiteSpace: 'nowrap'
+        }}>
+            {/* ① 月末予測 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Gauge size={14} color="#22d3ee" />
+                <span style={{ fontSize: '10px', fontWeight: '900' }}>EST.</span>
+                <span style={{ fontSize: '14px', fontWeight: '900', fontFamily: 'monospace' }}>{estimatedTotal}h</span>
+            </div>
 
-                {/* ① 月末着地予測（メイン） */}
-                <div className="flex items-center gap-2">
-                    <Gauge className="text-cyan-400 w-5 h-5" />
-                    <span className="text-sm font-medium text-slate-400">月末予測:</span>
-                    <span className="text-2xl font-bold text-cyan-400">{estimatedTotal}h</span>
+            {/* ② ノルマ群 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '1px solid #334155', paddingLeft: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Target size={12} color="#22c55e" />
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{requiredDailyHours}h</span>
                 </div>
-
-                {/* ② 思考を奪う「1日あたりのノルマ」 */}
-                <div className="flex gap-6">
-                    <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                            <Target size={14} className="text-green-400" /> 下限達成
-                        </div>
-                        <span className="text-lg font-mono font-bold text-green-400">
-              {requiredDailyHours}h<span className="text-xs font-normal">/日</span>
-            </span>
-                    </div>
-
-                    <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                            <AlertTriangle size={14} className="text-rose-400" /> 上限セーフ
-                        </div>
-                        <span className="text-lg font-mono font-bold text-rose-400">
-              {upperLimitWarning}h<span className="text-xs font-normal">/日</span>
-            </span>
-                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <AlertTriangle size={12} color="#f43f5e" />
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{upperLimitWarning}h</span>
                 </div>
+            </div>
 
-                {/* ③ 残り営業日（おまけ） */}
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest">
-                    残り {remainingBusinessDays} 営業日
-                </div>
+            {/* ③ 残り日数 */}
+            <div style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: '900' }}>
+                {remainingBusinessDays} DAYS
             </div>
         </div>
     );
 };
-
