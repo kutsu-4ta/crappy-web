@@ -1,25 +1,35 @@
-import { Target, Calendar, TrendingUp, Activity } from 'lucide-react';
-import type { DashboardStats } from '../types/workData';
+import type {DashboardStats} from '../types/workData';
 import {DashboardChart} from "./DashboardChart";
+import {TrendingUp} from "lucide-react";
 
 interface DashboardProps {
     stats: DashboardStats;
     currentTotal: number;
 }
 
-export const Dashboard = ({ stats, currentTotal }: DashboardProps) => {
-    // グラフ用ダミーデータ生成（実績 + 予測のライン）
-    const data = [
-        { day: 1, hours: 8 },
-        { day: 5, hours: 40 },
-        { day: 10, hours: 80 },
-        { day: 15, hours: currentTotal },
-        { day: 20, hours: stats.estimatedTotal },
-    ];
+export const Dashboard = ({stats, currentTotal}: DashboardProps) => {
+    // グラフ用データの整形
+    // 1日から月末まで、実績と予測を切り分ける
+    const totalDays = 20; // 営業日数などの変数
+    const today = 10;     // 現在の日数
+
+    const chartData = Array.from({length: totalDays}, (_, i) => {
+        const day = i + 1;
+        const isPast = day <= today;
+
+        return {
+            day,
+            // 実績：今日まで入れる
+            actual: isPast ? (currentTotal / today) * day : undefined,
+            // 予測：今日から月末まで繋げる
+            forecast: day >= today ? (currentTotal / today) * day : undefined,
+            // ターゲットゾーン：常に一定（または営業日に応じた理想線）
+            range: [stats.targetMin, stats.targetMax] as [number, number],
+        };
+    });
 
     return (
-        <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
+        <div className="grid gap-6">
             {/* 1. ペースアドバイザー（ハイライト） */}
             <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
                 <div className="relative z-10 flex justify-between items-center">
@@ -42,45 +52,28 @@ export const Dashboard = ({ stats, currentTotal }: DashboardProps) => {
                 </div>
             </div>
 
-            {/* 2. Recharts: 稼働推移と予測グラフ */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm space-y-6">
-                <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-mono">Projection Chart</span>
-                    <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded">Target: {stats.targetMin}-{stats.targetMax}h</span>
-                </div>
-
-                <div style={{ height: '200px', width: '100%', position: 'relative' }}>
-                    <DashboardChart stats={stats} currentTotal={currentTotal} data={data}/>
-                </div>
-
-                <div className="flex justify-between pt-4 border-t border-slate-50">
-                    <div className="text-center">
-                        <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Status</div>
-                        <div className="text-xs font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full">On Track</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Current</div>
-                        <div className="text-sm font-black font-mono">{currentTotal}h</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Expected</div>
-                        <div className="text-sm font-black font-mono text-cyan-600">{stats.estimatedTotal}h</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* 3. 予測とのギャップ（サブカード） */}
-            <div className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm flex items-center justify-between group hover:border-cyan-200 transition-colors cursor-default">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-cyan-50 transition-colors">
-                        <Target className="text-slate-400 group-hover:text-cyan-500" size={20} />
-                    </div>
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
+                {/* 1行サマリー：考えさせないUI */}
+                <div className="flex justify-between items-end mb-6">
                     <div>
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Goal Progress</div>
-                        <div className="text-lg font-black text-slate-800">
-                            あと <span className="text-cyan-600 font-mono">{(stats.targetMin - currentTotal).toFixed(1)}h</span> で下限達成
+                        <span
+                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Status</span>
+                        <div className="text-xl font-bold">
+                            月末着地予定: <span className="text-cyan-600">{stats.estimatedTotal}h</span>
                         </div>
                     </div>
+                    <div className="text-right text-xs font-medium text-slate-500">
+                        <div>下限まであと <span
+                            className="text-slate-900 font-bold">{(stats.targetMin - currentTotal).toFixed(1)}h</span>
+                        </div>
+                        <div>上限まであと <span
+                            className="text-slate-900 font-bold">{(stats.targetMax - currentTotal).toFixed(1)}h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{height: '240px', width: '100%'}}>
+                    <DashboardChart stats={stats} data={chartData}/>
                 </div>
             </div>
         </div>

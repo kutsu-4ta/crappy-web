@@ -1,45 +1,61 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
 import type { DashboardStats } from '../types/workData';
 
 interface ChartDataPoint {
     day: number;
-    hours: number;
+    actual?: number;   // 今日までの実績
+    forecast?: number; // 明日以降の予測
+    range: [number, number]; // [targetMin, targetMax] の固定帯
 }
 
 interface Props {
     stats: DashboardStats;
-    currentTotal: number;
     data: ChartDataPoint[];
 }
 
-export const DashboardChart = ({ stats, currentTotal, data }: Props) => {
-
-    // ResponsiveContainerがバグる場合、一時的に固定値を当てるか、
-    // debounce処理が必要ですが、まずは以下の設定を試してください
+export const DashboardChart = ({ stats, data }: Props) => {
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-                <defs>
-                    <linearGradient id="colorH" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                    </linearGradient>
-                </defs>
+            <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="day" hide />
                 <YAxis domain={[0, Math.max(stats.targetMax + 20, 200)]} hide />
-                <Tooltip />
-                <ReferenceLine y={stats.targetMin} stroke="#22c55e" strokeDasharray="4 4" />
-                <ReferenceLine y={stats.targetMax} stroke="#f43f5e" strokeDasharray="4 4" />
+
+                {/* 1. ターゲットゾーン (背景の帯) */}
                 <Area
                     type="monotone"
-                    dataKey="hours"
-                    stroke="#06b6d4"
-                    strokeWidth={3}
-                    fill="url(#colorH)"
-                    isAnimationActive={false} // アニメーションが原因で表示されないケースがあるため一旦オフ
+                    dataKey="range"
+                    stroke="none"
+                    fill="#22c55e"
+                    fillOpacity={0.1}
+                    isAnimationActive={false}
                 />
-            </AreaChart>
+
+                {/* 2. 実績線 (太い実線) */}
+                <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="#06b6d4"
+                    strokeWidth={4}
+                    dot={{ r: 4, fill: '#06b6d4' }}
+                    isAnimationActive={false}
+                />
+
+                {/* 3. 予測線 (点線) */}
+                <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    isAnimationActive={false}
+                />
+
+                <Tooltip
+                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+            </ComposedChart>
         </ResponsiveContainer>
     );
 };
